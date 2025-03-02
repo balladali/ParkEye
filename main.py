@@ -44,11 +44,12 @@ def parse_arguments():
     parser.add_argument('--font', type=str, help='Путь к файлу шрифта для отображения текста')
     parser.add_argument('--threshold', type=float, help='Порог определения занятости (0.0-1.0)')
     parser.add_argument('--spots-config', type=str, help='Путь к файлу с конфигурацией мест (JSON)')
+    parser.add_argument('--winter', action='store_true', help='Включить зимний режим для заснеженных парковок')
     
     return parser.parse_args()
 
 
-def analyze_single_image(image_path, save_path=None, font_path=None, threshold=None, spots_config=None):
+def analyze_single_image(image_path, save_path=None, font_path=None, threshold=None, spots_config=None, winter_mode=False):
     """
     Анализ одиночного изображения
     
@@ -57,6 +58,7 @@ def analyze_single_image(image_path, save_path=None, font_path=None, threshold=N
     :param font_path: путь к файлу шрифта (опционально)
     :param threshold: порог определения занятости (опционально)
     :param spots_config: путь к файлу с конфигурацией мест (опционально)
+    :param winter_mode: активировать зимний режим для заснеженных парковок
     :return: статус выполнения
     """
     if not os.path.exists(image_path):
@@ -82,7 +84,8 @@ def analyze_single_image(image_path, save_path=None, font_path=None, threshold=N
     
     # Обработка изображения
     # Используем метод для одиночных изображений вместо process_frame
-    result_frame, statuses = detector.process_single_image(frame, threshold)
+    mode = 'winter' if winter_mode else None
+    result_frame, statuses = detector.process_single_image(frame, threshold, mode)
     
     # Анализ результатов
     total_spots = len(statuses)
@@ -120,6 +123,7 @@ def analyze_single_image(image_path, save_path=None, font_path=None, threshold=N
         txt_path = os.path.splitext(save_path)[0] + ".txt"
         with open(txt_path, "w", encoding="utf-8") as f:
             f.write(f"Анализ изображения: {image_path}\n")
+            f.write(f"Режим: {'Зимний' if winter_mode else 'Автоопределение'}\n")
             f.write(f"Всего мест: {total_spots}\n")
             f.write(f"Свободных мест: {free_spots}\n")
             f.write(f"Занятых мест: {total_spots - free_spots}\n\n")
@@ -131,7 +135,7 @@ def analyze_single_image(image_path, save_path=None, font_path=None, threshold=N
     return 0
 
 
-def batch_process_images(input_pattern, output_dir, threshold=None, spots_config=None):
+def batch_process_images(input_pattern, output_dir, threshold=None, spots_config=None, winter_mode=False):
     """
     Пакетная обработка изображений
     
@@ -139,10 +143,12 @@ def batch_process_images(input_pattern, output_dir, threshold=None, spots_config
     :param output_dir: директория для сохранения результатов
     :param threshold: порог определения занятости (опционально)
     :param spots_config: путь к файлу с конфигурацией мест (опционально)
+    :param winter_mode: активировать зимний режим для заснеженных парковок
     :return: статус выполнения
     """
     print(f"Запуск пакетной обработки изображений по шаблону: {input_pattern}")
     print(f"Результаты будут сохранены в: {output_dir}")
+    print(f"Режим обработки: {'Зимний' if winter_mode else 'Автоопределение'}")
     
     detector = ParkingDetector(spots_config_file=spots_config)
     
@@ -178,7 +184,8 @@ def batch_process_images(input_pattern, output_dir, threshold=None, spots_config
             continue
             
         # Обработка изображения
-        result_frame, statuses = detector.process_single_image(image, threshold)
+        mode = 'winter' if winter_mode else None
+        result_frame, statuses = detector.process_single_image(image, threshold, mode)
         
         # Формирование имени выходного файла
         base_name = os.path.basename(image_path)
@@ -213,12 +220,12 @@ def main():
         
     # Проверка режима одиночного изображения
     if args.image:
-        return analyze_single_image(args.image, args.save, args.font, args.threshold, args.spots_config)
+        return analyze_single_image(args.image, args.save, args.font, args.threshold, args.spots_config, args.winter)
         
     # Проверка режима пакетной обработки
     if args.batch:
         output_dir = args.output_dir if args.output_dir else "results"
-        return batch_process_images(args.batch, output_dir)
+        return batch_process_images(args.batch, output_dir, args.threshold, args.spots_config, args.winter)
     
     # Обновляем конфигурацию при необходимости
     if args.source is not None:

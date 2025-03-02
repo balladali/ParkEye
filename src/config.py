@@ -69,6 +69,19 @@ PARKING_SPOTS = [
 OCCUPANCY_THRESHOLD = 0.6  # Для видеопотока
 SINGLE_IMAGE_THRESHOLD = 0.2  # Для одиночных изображений
 
+# Настройки для зимнего режима (заснеженные парковки)
+WINTER_OCCUPANCY_THRESHOLD = 0.15  # Порог для зимнего режима
+SNOW_DETECTION_THRESHOLD = 0.3  # Доля белых пикселей для определения снега
+# Веса признаков для зимнего режима
+WINTER_WEIGHTS = {
+    'edge_density': 0.20,     # Плотность краев
+    'thresh_density': 0.15,   # Плотность объектов
+    'std_dev': 0.20,          # Вариация яркости
+    'gradient_mean': 0.15,    # Средний градиент
+    'color_var': 0.10,        # Вариация цветов
+    'color_density': 0.20     # Плотность нетипичных для снега цветов
+}
+
 # Настройки веб-интерфейса
 WEB_PORT = 5000
 DEBUG_MODE = True

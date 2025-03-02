@@ -274,28 +274,56 @@ class ParkingDetector:
             
         return result_frame, statuses
         
-    def process_single_image(self, frame: np.ndarray, threshold=None) -> Tuple[np.ndarray, Dict[int, bool]]:
+    def process_single_image(self, frame: np.ndarray, threshold=None, mode=None) -> Tuple[np.ndarray, Dict[int, bool]]:
         """
         Обработка одиночного изображения для определения статуса парковочных мест
         Использует другие методы вместо вычитания фона
         
         :param frame: изображение
         :param threshold: порог определения занятости (None - использовать значение из конфигурации)
+        :param mode: режим обработки ('winter' - зимние условия, None - автоопределение)
         :return: кортеж (обработанный кадр с разметкой, словарь статусов мест)
         """
         # Копия кадра для отрисовки результатов
         result_frame = frame.copy()
         
+        # Проверка на наличие снега
+        is_snowy, snow_percent = self.is_snowy_image(frame)
+        
+        # Определение режима обработки
+        winter_mode = mode == 'winter' or (mode is None and is_snowy)
+        
+        # Улучшаем контраст для заснеженных изображений
+        if winter_mode:
+            # Применяем улучшение контраста к копии изображения для обработки
+            # Оригинальное изображение сохраняем для отображения
+            frame_for_processing = self.enhance_snowy_image(frame)
+        else:
+            frame_for_processing = frame
+        
         # Карта статусов (id места -> занято)
         statuses = {}
         
         # Порог определения занятости
-        occupancy_threshold = threshold if threshold is not None else config.SINGLE_IMAGE_THRESHOLD
+        if threshold is not None:
+            # Если пользователь задал порог явно, используем его
+            occupancy_threshold = threshold
+        else:
+            # Используем соответствующий порог из конфигурации в зависимости от режима
+            occupancy_threshold = config.WINTER_OCCUPANCY_THRESHOLD if winter_mode else config.SINGLE_IMAGE_THRESHOLD
+        
+        # Отладочная информация
+        debug_info = {
+            "mode": "winter" if winter_mode else "normal",
+            "snow_percent": snow_percent,
+            "threshold": occupancy_threshold
+        }
+        print(f"Режим обработки: {'Зимний' if winter_mode else 'Обычный'}, снега: {snow_percent:.1%}, порог: {occupancy_threshold:.2f}")
         
         # Обработка каждого парковочного места
         for spot in self.spots:
-            # Получение ROI для парковочного места
-            roi = spot.get_roi(frame)
+            # Получение ROI для парковочного места из обработанного изображения
+            roi = spot.get_roi(frame_for_processing)
             
             # Преобразование в оттенки серого
             gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
@@ -520,6 +548,31 @@ class ParkingDetector:
                 
         print(f"Обработка завершена. Успешно обработано {success_count}/{len(image_files)} изображений")
         return success_count
+
+    def enhance_snowy_image(self, image: np.ndarray) -> np.ndarray:
+        """
+        Улучшение контраста на заснеженном изображении для лучшего обнаружения автомобилей
+        
+        :param image: исходное изображение
+        :return: улучшенное изображение
+        """
+        # Преобразуем в LAB цветовое пространство (L - яркость, A,B - цветовые компоненты)
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        
+        # Разделяем на каналы
+        l, a, b = cv2.split(lab)
+        
+        # Применяем CLAHE (адаптивное выравнивание гистограммы) к яркостному каналу
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        cl = clahe.apply(l)
+        
+        # Объединяем каналы обратно
+        enhanced_lab = cv2.merge((cl, a, b))
+        
+        # Преобразуем обратно в BGR
+        enhanced_image = cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
+        
+        return enhanced_image
 
 
 # Пример использования

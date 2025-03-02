@@ -2,19 +2,19 @@
 Основной сервис для управления системой определения свободных парковочных мест
 """
 
-import logging
-import os
-import threading
-import time
-from datetime import datetime
-from typing import Dict, Optional
-
 import cv2
 import numpy as np
+import time
+import os
+import threading
+import logging
+from datetime import datetime
+from typing import Dict, Optional, List, Tuple
 
 from src import config
 from src.camera import Camera
 from src.detector import ParkingDetector
+
 
 # Настройка логирования
 logging.basicConfig(
