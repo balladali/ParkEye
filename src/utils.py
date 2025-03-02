@@ -2,11 +2,11 @@
 Утилиты для проекта ParkEye
 """
 
-import cv2
-import numpy as np
-import os
 import json
-from typing import List, Dict, Tuple, Any
+import os
+
+import cv2
+
 
 class ParkingSpotMarker:
     """

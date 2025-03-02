@@ -2,15 +2,15 @@
 Модуль для обнаружения и анализа парковочных мест
 """
 
-import cv2
-import numpy as np
-from typing import Dict, List, Tuple, Any, Optional
-import os
-import time
 import glob
 import json
-from PIL import Image, ImageDraw, ImageFont
+import os
+import time
+from typing import Dict, List, Tuple, Optional
+
+import cv2
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
 from src import config
 
