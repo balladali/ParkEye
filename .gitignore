@@ -1,0 +1,68 @@
+# Байткод Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Виртуальные окружения
+.venv/
+venv/
+ENV/
+env/
+
+# Дистрибутивы и пакеты
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# Файлы IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Логи и временные файлы
+*.log
+*.tmp
+*.temp
+
+# Результаты анализа парковки
+results/
+
+# Модели машинного обучения и большие файлы данных
+*.h5
+*.weights
+*.onnx
+*.pb
+*.tflite
+*.pt
+
+# Файлы операционной системы
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Настройки Jupyter
+.ipynb_checkpoints/
+
+# Локальные конфигурационные файлы
+.env
+.local
+
+# Видео и изображения (при необходимости можно раскомментировать)
+*.mp4
+*.avi
+*.jpg
+*.jpeg
+*.png
+
+# Кэш opencv
+.opencv-cache/ 
